@@ -14,13 +14,13 @@ internal fun KSClassDeclaration.validateModifierContainsMapper(logger: KSPLogger
         this.hasAnnotation(Mapper::class) -> Mapper::class.simpleName
         this.hasAnnotation(EditableMapper::class) -> EditableMapper::class.simpleName
         this.hasAnnotation(MapperIgnore::class) -> MapperIgnore::class.simpleName
-        else -> "UnknownAnnotation"  // This should ideally never be reached.
+        else -> "UnknownAnnotation" // This should ideally never be reached.
     }
 
     if (!modifiers.contains(Modifier.DATA)) {
         logger.error(
             "$annotationName annotation can only be applied to data classes, " +
-                    "but it was applied to ${classKind.describeClassKind()}.",
+                "but it was applied to ${classKind.describeClassKind()}.",
         )
         return false
     }

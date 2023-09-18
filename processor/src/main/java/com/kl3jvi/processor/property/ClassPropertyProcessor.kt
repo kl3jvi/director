@@ -4,7 +4,6 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.kl3jvi.processor.mapper.ProcessedProperties
 import com.kl3jvi.processor.mapper.ProcessedProperty
 
@@ -52,7 +51,7 @@ class ClassPropertyProcessor {
     fun processClassForEditableMapper(
         classDeclaration: KSClassDeclaration,
         editableFields: List<String>,
-        resolver: Resolver
+        resolver: Resolver,
     ): ProcessedProperties {
         // Retrieve target class from annotation
         val targetClass = resolver.getClassDeclarationByName("com.kl3jvi.api.EditableMapper")
@@ -83,7 +82,4 @@ class ClassPropertyProcessor {
         // Return the processed properties
         return ProcessedProperties(classDeclaration, targetClass, processedPropertiesList)
     }
-
-
 }
-

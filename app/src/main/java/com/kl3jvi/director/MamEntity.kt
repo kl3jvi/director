@@ -4,7 +4,7 @@ import com.kl3jvi.api.EditableMapper
 
 @EditableMapper(
     MamNetwork::class,
-    ["name", "age"]
+    ["name", "age"],
 )
 data class MamEntity(
     val name: String,

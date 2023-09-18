@@ -63,7 +63,6 @@ fun generateAndWriteEditableMapperFile(
 fun generateAndWriteMapperIgnoreFile(
     processedProperties: Unit,
     codeGenerator: CodeGenerator,
-    logger: KSPLogger
+    logger: KSPLogger,
 ) {
-
 }

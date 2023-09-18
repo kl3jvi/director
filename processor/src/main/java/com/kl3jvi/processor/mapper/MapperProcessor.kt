@@ -11,7 +11,6 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
 import com.kl3jvi.api.EditableMapper
 import com.kl3jvi.api.Mapper
-import com.kl3jvi.api.MapperIgnore
 import com.kl3jvi.processor.property.ClassPropertyProcessor
 import com.kl3jvi.processor.util.validateModifierContainsMapper
 import kotlin.reflect.KClass
@@ -71,7 +70,7 @@ class MapperProcessor(
                     propertyProcessor.processClassForEditableMapper(
                         classDeclaration,
                         editableFields,
-                        resolver
+                        resolver,
                     )
                 }
 
@@ -82,7 +81,6 @@ class MapperProcessor(
                 logger,
             )
         }
-
 
 //        val mapperIgnoreAnnotatedClasses =
 //            getDeclarationsAnnotatedWith(MapperIgnore::class, resolver)
@@ -111,7 +109,7 @@ class MapperProcessor(
      */
     private fun getDeclarationsAnnotatedWith(
         annotationClass: KClass<*>,
-        resolver: Resolver
+        resolver: Resolver,
     ): Sequence<KSClassDeclaration> =
         resolver.getSymbolsWithAnnotation(annotationClass.java.name)
             .filterIsInstance<KSClassDeclaration>()
