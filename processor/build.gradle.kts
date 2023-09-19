@@ -1,22 +1,5 @@
 plugins {
     kotlin("jvm")
-    `maven-publish`
-    signing
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = "io.kl3jvi.director"
-            artifactId = "director-processor"
-            version = "0.0.1"
-        }
-    }
-}
-
-signing {
-    sign(publishing.publications["mavenJava"])
 }
 
 java {

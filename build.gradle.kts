@@ -1,13 +1,8 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file where you can add configuration options common to all sub-projects/modules. 89F7D73C
 plugins {
     id("com.android.application") version "8.2.0-beta04" apply false
     id("org.jetbrains.kotlin.android") version "1.9.10" apply false
     id("org.jetbrains.kotlin.jvm") version "1.9.10" apply false
     id("com.android.library") version "8.2.0-beta04" apply false
     id("com.google.devtools.ksp") version "1.9.10-1.0.13"
-}
-buildscript {
-    dependencies {
-        classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
-    }
 }
