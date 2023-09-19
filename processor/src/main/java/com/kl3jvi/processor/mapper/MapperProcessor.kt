@@ -44,15 +44,28 @@ class MapperProcessor(
         val editableMapperAnnotatedClasses =
             getDeclarationsAnnotatedWith(EditableMapper::class, resolver) { classDeclaration ->
                 val editableFields = classDeclaration.getEditableFieldsFromAnnotation()
+
                 if (editableFields == null) {
                     logger.error("Could not extract editable fields for ${classDeclaration.qualifiedName?.asString()}")
                     return@getDeclarationsAnnotatedWith null
                 }
+                val targetClassType = classDeclaration.getEditableMapperAnnotation()
+                    ?.getTargetClassType()
+                    ?.firstOrNull()
+                    ?: return@getDeclarationsAnnotatedWith null
+
+                val targetClassName = targetClassType
+                    .declaration
+                    .qualifiedName
+                    ?.asString()
+                    ?: return@getDeclarationsAnnotatedWith null
 
                 propertyProcessor.processClassForEditableMapper(
                     classDeclaration,
+                    targetClassName,
                     editableFields,
                     resolver,
+                    logger
                 )
             }
 
@@ -77,7 +90,7 @@ class MapperProcessor(
                         it.declaration
                             .qualifiedName
                             ?.asString() ?: return@mapNotNull null
-                    } ?: return@getDeclarationsAnnotatedWith null
+                    }
 
                 propertyProcessor.processClass(
                     classDeclaration,
@@ -131,9 +144,14 @@ class MapperProcessor(
      * @return The [KSType] representing the target class type, or null if not found.
      */
     private fun KSAnnotation.getTargetClassType(): List<KSType>? {
-        return this.arguments.firstOrNull {
+        val argumentValue = this.arguments.firstOrNull {
             it.name?.asString() == ARGUMENT_TARGET
-        }?.value as? List<KSType>
+        }?.value
+
+        return when {
+            argumentValue is List<*> && argumentValue.all { it is KSType } -> argumentValue as? List<KSType>
+            else -> listOf(argumentValue) as? List<KSType>
+        }
     }
 
     /**
@@ -146,12 +164,18 @@ class MapperProcessor(
      */
     private fun KSClassDeclaration.getMapperAnnotation(): KSAnnotation? {
         return this.annotations.firstOrNull {
-            it.shortName.asString() == ANNOTATION_MAPPER
+            it.shortName.asString() == Mapper::class.simpleName
+        }
+    }
+
+    private fun KSClassDeclaration.getEditableMapperAnnotation(): KSAnnotation? {
+        return this.annotations.firstOrNull {
+            it.shortName.asString() == EditableMapper::class.simpleName
         }
     }
 
     private fun KSClassDeclaration.getEditableFieldsFromAnnotation(): List<String>? {
-        return this.annotations.firstOrNull { it.shortName.asString() == ANNOTATION_EDITABLE_MAPPER }
+        return this.annotations.firstOrNull { it.shortName.asString() == EditableMapper::class.simpleName }
             ?.arguments
             ?.firstOrNull { it.name?.asString() == ARGUMENT_EDITABLE_FIELDS }
             ?.value as? List<String>

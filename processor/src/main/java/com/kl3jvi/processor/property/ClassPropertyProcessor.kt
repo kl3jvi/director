@@ -2,6 +2,7 @@ package com.kl3jvi.processor.property
 
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredProperties
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.kl3jvi.processor.mapper.ProcessedProperties
@@ -52,36 +53,46 @@ class ClassPropertyProcessor {
 
     fun processClassForEditableMapper(
         classDeclaration: KSClassDeclaration,
+        targetClassName: String,
         editableFields: List<String>,
         resolver: Resolver,
+        logger: KSPLogger,
     ): ProcessedProperties {
-        // Retrieve target class from annotation
-        val targetClass = resolver.getClassDeclarationByName("com.kl3jvi.api.EditableMapper")
+        val targetClass = resolver.getClassDeclarationByName(targetClassName)
 
-        // Retrieve all properties of the classDeclaration and targetClass
-        val sourceProperties = classDeclaration.getAllProperties()
+        val sourceProperties =
+            classDeclaration.getAllProperties().associateBy { it.simpleName.asString() }
         val targetProperties =
             targetClass?.getAllProperties()?.associateBy { it.simpleName.asString() }
 
-        // Filter the source properties by the ones that are listed in editableFields
-        val filteredSourceProperties =
-            sourceProperties.filter { it.simpleName.asString() in editableFields }
+        // Check if all editableFields are valid properties of sourceClass
+        editableFields.forEach { field ->
+            if (!sourceProperties.containsKey(field)) {
+                logger.error("Field $field is not a valid property of ${classDeclaration.qualifiedName?.asString()}")
+            }
+        }
 
-        // Map these properties to ProcessedProperty objects
-        val processedPropertiesList = filteredSourceProperties.map { sourceProperty ->
-            val sourceName = sourceProperty.simpleName.asString()
-            val sourceType = sourceProperty.type.resolve().toString()
+        val processedPropertiesList = editableFields.mapNotNull { editableField ->
+            val sourceProperty = sourceProperties[editableField]
+            val targetProperty = targetProperties?.get(editableField)
 
-            val targetProperty = targetProperties?.get(sourceName)
-            val targetName = targetProperty?.simpleName?.asString()
-            val targetType = targetProperty?.type?.resolve()?.toString()
+            if (sourceProperty != null && targetProperty != null) {
+                val sourceType = sourceProperty.type.resolve().toString()
+                val targetType = targetProperty.type.resolve().toString()
 
-            val isMatching = targetName != null && sourceType == targetType
+                val isMatching = sourceType == targetType
 
-            ProcessedProperty(sourceName, sourceType, targetName, targetType, isMatching)
-        }.toList()
+                // Add logic here for type transformation if needed
 
-        // Return the processed properties
+                ProcessedProperty(editableField, sourceType, editableField, targetType, isMatching)
+            } else {
+                // If either source or target property doesn't exist for an editableField, return null.
+                // This can be enhanced to handle fallbacks or default values.
+                null
+            }
+        }
+
         return ProcessedProperties(classDeclaration, targetClass, processedPropertiesList)
     }
 }
+
