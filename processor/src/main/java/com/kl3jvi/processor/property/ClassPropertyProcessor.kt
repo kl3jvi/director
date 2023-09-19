@@ -95,4 +95,3 @@ class ClassPropertyProcessor {
         return ProcessedProperties(classDeclaration, targetClass, processedPropertiesList)
     }
 }
-

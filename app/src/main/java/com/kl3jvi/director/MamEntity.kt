@@ -1,9 +1,10 @@
 package com.kl3jvi.director
 
 import com.kl3jvi.api.EditableMapper
-
+import com.kl3jvi.api.Mapper
 
 @EditableMapper(target = MamUi::class, editableFields = ["name", "age"])
+@Mapper(target = [MamNetwork::class])
 data class MamEntity(
     val name: String,
     val age: Int,

@@ -6,14 +6,12 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.kl3jvi.api.EditableMapper
 import com.kl3jvi.api.Mapper
-import com.kl3jvi.api.MapperIgnore
 import kotlin.reflect.KClass
 
 internal fun KSClassDeclaration.validateModifierContainsMapper(logger: KSPLogger): Boolean {
     val annotationName = when {
         this.hasAnnotation(Mapper::class) -> Mapper::class.simpleName
         this.hasAnnotation(EditableMapper::class) -> EditableMapper::class.simpleName
-        this.hasAnnotation(MapperIgnore::class) -> MapperIgnore::class.simpleName
         else -> "UnknownAnnotation" // This should ideally never be reached.
     }
 

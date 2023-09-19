@@ -78,7 +78,6 @@ fun generateAndWriteEditableMapperFile(
     }
 }
 
-
 fun generateAndWriteMapperIgnoreFile(
     processedProperties: Unit,
     codeGenerator: CodeGenerator,

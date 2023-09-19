@@ -33,7 +33,6 @@ class MapperProcessor(
         val propertyProcessor = ClassPropertyProcessor()
         processMapper(resolver, propertyProcessor)
         processEditableMapper(resolver, propertyProcessor)
-//        processMapperIgnore()
         return emptyList()
     }
 
@@ -65,7 +64,7 @@ class MapperProcessor(
                     targetClassName,
                     editableFields,
                     resolver,
-                    logger
+                    logger,
                 )
             }
 
@@ -183,9 +182,6 @@ class MapperProcessor(
 
     companion object {
         const val ARGUMENT_TARGET = "target"
-        const val ANNOTATION_MAPPER = "Mapper"
-        const val ANNOTATION_EDITABLE_MAPPER = "EditableMapper"
-        const val ANNOTATION_MAPPER_IGNORE = "MapperIgnore"
         const val ARGUMENT_EDITABLE_FIELDS = "editableFields"
     }
 }
