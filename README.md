@@ -1,5 +1,6 @@
 # Director Library
 <img src="https://raw.githubusercontent.com/kl3jvi/mappy/764dd6626852d563e21472f4cef30c640a188ff1/assets/mappy.svg">
+
 The `Director` library is an annotation-based code generation tool that helps developers automatically generate mapping functions for their Kotlin classes.
 
 ## Features
