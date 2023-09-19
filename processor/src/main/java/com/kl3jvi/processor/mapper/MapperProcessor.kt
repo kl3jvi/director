@@ -44,7 +44,7 @@ class MapperProcessor(
             getDeclarationsAnnotatedWith(EditableMapper::class, resolver) { classDeclaration ->
                 val editableFields = classDeclaration.getEditableFieldsFromAnnotation()
 
-                if (editableFields == null) {
+                if (editableFields.isEmpty()) {
                     logger.error("Could not extract editable fields for ${classDeclaration.qualifiedName?.asString()}")
                     return@getDeclarationsAnnotatedWith null
                 }
@@ -149,7 +149,8 @@ class MapperProcessor(
 
         return when {
             argumentValue is List<*> && argumentValue.all { it is KSType } -> argumentValue as? List<KSType>
-            else -> listOf(argumentValue) as? List<KSType>
+                ?: emptyList()
+            else -> listOf(argumentValue) as? List<KSType> ?: emptyList()
         }
     }
 
@@ -173,11 +174,11 @@ class MapperProcessor(
         }
     }
 
-    private fun KSClassDeclaration.getEditableFieldsFromAnnotation(): List<String>? {
+    private fun KSClassDeclaration.getEditableFieldsFromAnnotation(): List<String> {
         return this.annotations.firstOrNull { it.shortName.asString() == EditableMapper::class.simpleName }
             ?.arguments
             ?.firstOrNull { it.name?.asString() == ARGUMENT_EDITABLE_FIELDS }
-            ?.value as? List<String>
+            ?.value as? List<String> ?: emptyList()
     }
 
     companion object {

@@ -6,3 +6,8 @@ plugins {
     id("com.android.library") version "8.2.0-beta04" apply false
     id("com.google.devtools.ksp") version "1.9.10-1.0.13"
 }
+buildscript {
+    dependencies {
+        classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
+    }
+}

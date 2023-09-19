@@ -77,10 +77,3 @@ fun generateAndWriteEditableMapperFile(
         fileSpec.writeTo(writer)
     }
 }
-
-fun generateAndWriteMapperIgnoreFile(
-    processedProperties: Unit,
-    codeGenerator: CodeGenerator,
-    logger: KSPLogger,
-) {
-}

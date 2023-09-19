@@ -1,6 +1,24 @@
 plugins {
     kotlin("jvm")
+    `maven-publish`
+    signing
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = "io.kl3jvi.director"
+            artifactId = "director-processor"
+            version = "0.0.1"
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["mavenJava"])
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -12,5 +30,5 @@ dependencies {
 // implementation of ksp, ksp api, and kotlin poet
     implementation("com.google.devtools.ksp:symbol-processing-api:1.9.10-1.0.13")
     implementation("com.google.devtools.ksp:symbol-processing:1.9.10-1.0.13")
-    implementation("com.squareup:kotlinpoet:1.12.0")
+    implementation("com.squareup:kotlinpoet:1.14.2")
 }
