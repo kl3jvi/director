@@ -31,22 +31,59 @@ class MapperProcessor(
      */
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val propertyProcessor = ClassPropertyProcessor()
+        processMapper(resolver, propertyProcessor)
+        processEditableMapper(resolver, propertyProcessor)
+//        processMapperIgnore()
+        return emptyList()
+    }
 
-        // Retrieve all classes annotated with Mapper
-        val annotatedClasses = getDeclarationsAnnotatedWith(Mapper::class, resolver)
-            .filter { it.validate() && it.validateModifierContainsMapper(logger) }
-            .mapNotNull { classDeclaration ->
+    private fun processEditableMapper(
+        resolver: Resolver,
+        propertyProcessor: ClassPropertyProcessor,
+    ) {
+        val editableMapperAnnotatedClasses =
+            getDeclarationsAnnotatedWith(EditableMapper::class, resolver) { classDeclaration ->
+                val editableFields = classDeclaration.getEditableFieldsFromAnnotation()
+                if (editableFields == null) {
+                    logger.error("Could not extract editable fields for ${classDeclaration.qualifiedName?.asString()}")
+                    return@getDeclarationsAnnotatedWith null
+                }
+
+                propertyProcessor.processClassForEditableMapper(
+                    classDeclaration,
+                    editableFields,
+                    resolver,
+                )
+            }
+
+        editableMapperAnnotatedClasses.forEach { processedProperties ->
+            generateAndWriteEditableMapperFile(
+                processedProperties,
+                codeGenerator,
+                logger,
+            )
+        }
+    }
+
+    private fun processMapper(resolver: Resolver, propertyProcessor: ClassPropertyProcessor) {
+        val annotatedClasses =
+            getDeclarationsAnnotatedWith(Mapper::class, resolver) { classDeclaration ->
                 val targetClassType = classDeclaration.getMapperAnnotation()
                     ?.getTargetClassType()
-                    ?: return@mapNotNull null
+                    ?: return@getDeclarationsAnnotatedWith null
 
                 val targetClassName = targetClassType
-                    .declaration
-                    .qualifiedName
-                    ?.asString()
-                    ?: return@mapNotNull null
+                    .mapNotNull {
+                        it.declaration
+                            .qualifiedName
+                            ?.asString() ?: return@mapNotNull null
+                    } ?: return@getDeclarationsAnnotatedWith null
 
-                propertyProcessor.processClass(classDeclaration, targetClassName, resolver)
+                propertyProcessor.processClass(
+                    classDeclaration,
+                    targetClassName,
+                    resolver,
+                )
             }
 
         annotatedClasses.forEach { processedProperties ->
@@ -56,64 +93,33 @@ class MapperProcessor(
                 logger,
             )
         }
-
-        val editableMapperAnnotatedClasses =
-            getDeclarationsAnnotatedWith(EditableMapper::class, resolver)
-                .filter { it.validateModifierContainsMapper(logger) }
-                .mapNotNull { classDeclaration ->
-                    val editableFields = classDeclaration.getEditableFieldsFromAnnotation()
-                    if (editableFields == null) {
-                        logger.error("Could not extract editable fields for ${classDeclaration.qualifiedName?.asString()}")
-                        return@mapNotNull null
-                    }
-
-                    propertyProcessor.processClassForEditableMapper(
-                        classDeclaration,
-                        editableFields,
-                        resolver,
-                    )
-                }
-
-        editableMapperAnnotatedClasses.forEach { processedProperties ->
-            generateAndWriteEditableMapperFile(
-                processedProperties,
-                codeGenerator,
-                logger,
-            )
-        }
-
-//        val mapperIgnoreAnnotatedClasses =
-//            getDeclarationsAnnotatedWith(MapperIgnore::class, resolver)
-//                .filter { it.validateModifierContainsMapper(logger) }
-//                .mapNotNull { ... }
-//
-//        mapperIgnoreAnnotatedClasses.forEach { processedProperties ->
-//            generateAndWriteMapperIgnoreFile(
-//                processedProperties,
-//                codeGenerator,
-//                logger,
-//            )
-//        }
-        return emptyList()
     }
 
     /**
-     * Retrieve Kotlin class declarations annotated with the [Mapper] annotation from the
-     * specified [resolver].
+     * Retrieves a sequence of declarations annotated with the given annotation class.
      *
-     * This function queries the [resolver] to find Kotlin class symbols that are annotated with the
-     * [Mapper] annotation and returns them as a sequence of [KSClassDeclaration].
+     * This function searches for Kotlin symbols that have been annotated with the specified annotation
+     * and applies a transformation to them before returning a sequence.
      *
-     * @param resolver The resolver used to retrieve class declarations.
-     * @return A sequence of [KSClassDeclaration] representing classes annotated with [Mapper].
+     * @param annotationClass The `KClass` of the annotation to search for.
+     * @param resolver The resolver used to find symbols with the given annotation.
+     * @param transform A transformation function that is applied to each `KSClassDeclaration` found.
+     *                  It should return an instance of type `R` or null if the transformation isn't applicable.
+     *
+     * @return A sequence of transformed elements of type `R` corresponding to the symbols that were
+     *         annotated with the given annotation.
      */
-    private fun getDeclarationsAnnotatedWith(
+    private fun <R : Any> getDeclarationsAnnotatedWith(
         annotationClass: KClass<*>,
         resolver: Resolver,
-    ): Sequence<KSClassDeclaration> =
-        resolver.getSymbolsWithAnnotation(annotationClass.java.name)
+        transform: (KSClassDeclaration) -> R?,
+    ): Sequence<R> {
+        return resolver.getSymbolsWithAnnotation(annotationClass.java.name)
             .filterIsInstance<KSClassDeclaration>()
             .distinct()
+            .filter { it.validate() && it.validateModifierContainsMapper(logger) }
+            .mapNotNull(transform)
+    }
 
     /**
      * Retrieve the target class type specified in a [KSAnnotation] with the [Mapper] annotation.
@@ -124,10 +130,10 @@ class MapperProcessor(
      *
      * @return The [KSType] representing the target class type, or null if not found.
      */
-    private fun KSAnnotation.getTargetClassType(): KSType? {
+    private fun KSAnnotation.getTargetClassType(): List<KSType>? {
         return this.arguments.firstOrNull {
             it.name?.asString() == ARGUMENT_TARGET
-        }?.value as? KSType
+        }?.value as? List<KSType>
     }
 
     /**

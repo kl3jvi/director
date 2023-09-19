@@ -24,28 +24,30 @@ class ClassPropertyProcessor {
      */
     fun processClass(
         sourceClass: KSClassDeclaration,
-        targetClassName: String,
+        targetClassNames: List<String>,
         resolver: Resolver,
-    ): ProcessedProperties? {
-        val targetClass = resolver.getClassDeclarationByName(targetClassName) ?: return null
-        val sourceProperties = sourceClass.getDeclaredProperties()
-        val targetProperties = targetClass.getDeclaredProperties()
+    ): List<ProcessedProperties?> {
+        return targetClassNames.map { targetClassName ->
+            val targetClass = resolver.getClassDeclarationByName(targetClassName) ?: return@map null
+            val sourceProperties = sourceClass.getDeclaredProperties()
+            val targetProperties = targetClass.getDeclaredProperties()
 
-        val processedProperties = sourceProperties.map { sourceProp ->
-            val correspondingTargetProperty =
-                targetProperties.find { it.simpleName.asString() == sourceProp.simpleName.asString() }
+            val processedProperties = sourceProperties.map { sourceProp ->
+                val correspondingTargetProperty =
+                    targetProperties.find { it.simpleName.asString() == sourceProp.simpleName.asString() }
 
-            ProcessedProperty(
-                sourceName = sourceProp.simpleName.asString(),
-                sourceType = sourceProp.type.resolve().declaration.qualifiedName?.asString()
-                    ?: "",
-                targetName = correspondingTargetProperty?.simpleName?.asString(),
-                targetType = correspondingTargetProperty?.type?.resolve()?.declaration?.qualifiedName?.asString(),
-                isMatching = (sourceProp.type.resolve().declaration == correspondingTargetProperty?.type?.resolve()?.declaration),
-            )
-        }.toList()
+                ProcessedProperty(
+                    sourceName = sourceProp.simpleName.asString(),
+                    sourceType = sourceProp.type.resolve().declaration.qualifiedName?.asString()
+                        ?: "",
+                    targetName = correspondingTargetProperty?.simpleName?.asString(),
+                    targetType = correspondingTargetProperty?.type?.resolve()?.declaration?.qualifiedName?.asString(),
+                    isMatching = (sourceProp.type.resolve().declaration == correspondingTargetProperty?.type?.resolve()?.declaration),
+                )
+            }.toList()
 
-        return ProcessedProperties(sourceClass, targetClass, processedProperties)
+            ProcessedProperties(sourceClass, targetClass, processedProperties)
+        }
     }
 
     fun processClassForEditableMapper(
